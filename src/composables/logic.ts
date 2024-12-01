@@ -1,4 +1,4 @@
-import type{ BlockState } from "~/types"
+import type { BlockState } from '~/types'
 
 const directions = [
   [1, 1],
@@ -10,25 +10,34 @@ const directions = [
   [-1, 1],
   [0, 1],
 ]
+
+interface GameState {
+  board: BlockState[][]// 二维数组
+  mineGenarated: boolean
+  gameState: 'play' | 'won' | 'lost'
+}
 export class GamePlay {
-
-
-  state = ref<BlockState[][]>([])
-  mineGenarated = false
+  state = ref() as Ref<GameState>
   constructor(public width: number, public height: number) {
-
     this.reset()
   }
+
+  get board() {
+    return this.state.value?.board
+  }
+
   reset() {
-    this.mineGenarated = false
-    this.state.value = Array.from({ length: this.height }, (_, y) =>
-      Array.from({ length: this.width }, (_, x): BlockState => ({
-        x,
-        y,
-        adjacentMines: 0,
-        revealed: false,
-      }))
-    )
+    this.state.value = {
+      mineGenarated: false,
+      gameState: 'play',
+      board: Array.from({ length: this.height }, (_, y) =>
+        Array.from({ length: this.width }, (_, x): BlockState => ({
+          x,
+          y,
+          adjacentMines: 0,
+          revealed: false,
+        }))),
+    }
   }
 
   genarateMines(state: BlockState[][], initial: BlockState) {
@@ -46,10 +55,8 @@ export class GamePlay {
     this.updateNumbers()
   }
 
-
-
   updateNumbers() {
-    this.state.value.forEach((row) => {
+    this.board.forEach((row) => {
       row.forEach((block) => {
         if (block.mine)
           return
@@ -60,18 +67,6 @@ export class GamePlay {
         })
       })
     })
-  }
-
-  getSibLings(block: BlockState) {
-    return directions.map(([dx, dy]) => {
-      const x2 = block.x + dx
-      const y2 = block.y + dy
-      if (x2 < 0 || x2 >= this.width || y2 < 0 || y2 >= this.height)
-        return undefined
-
-      return this.state.value[y2][x2]
-    })
-      .filter(Boolean) as BlockState[]
   }
 
   expendZero(block: BlockState) {
@@ -86,38 +81,67 @@ export class GamePlay {
     })
   }
 
-
-
   onRightClick(block: BlockState) {
+    if (this.state.value.gameState !== 'play') {
+      return
+    }
     if (block.revealed)
       return
     block.flagged = !block.flagged
   }
+
   onClick(block: BlockState) {
-    if (!this.mineGenarated) {
-      this.genarateMines(this.state.value, block)
-      this.mineGenarated = true
-    }
-    block.revealed = true
-    if (block.mine) {
-      alert('Game Over')
-    }
-    this.expendZero(block)
-  }
-
-
-
-  checkGameState() {
-    if (!this.mineGenarated) {
+    if (this.state.value.gameState === 'lost' || block.revealed) {
       return
     }
-    const blocks = this.state.value.flat()// flat() 将嵌套的数组展平
+
+    if (!this.state.value.mineGenarated) {
+      this.genarateMines(this.board, block)
+      this.state.value.mineGenarated = true
+    }
+
+    block.revealed = true
+
+    if (block.mine) {
+      this.state.value.gameState = 'lost'
+      this.showAllMines()
+    }
+    else {
+      this.expendZero(block)
+    }
+  }
+
+  getSibLings(block: BlockState) {
+    return directions.map(([dx, dy]) => {
+      const x2 = block.x + dx
+      const y2 = block.y + dy
+      if (x2 < 0 || x2 >= this.width || y2 < 0 || y2 >= this.height)
+        return undefined
+
+      return this.board[y2][x2]
+    })
+      .filter(Boolean) as BlockState[]
+  }
+
+  showAllMines() {
+    this.board.flat().forEach((i) => {
+      if (i.mine)
+        i.revealed = true
+    })
+  }
+
+  checkGameState() {
+    if (!this.state.value.mineGenarated) {
+      return
+    }
+    const blocks = this.board.flat()// flat() 将嵌套的数组展平
     if (blocks.every(block => block.revealed || block.flagged)) {
       if (blocks.some(block => block.flagged && block.mine)) {
-        alert('U Cheat!')
+        this.state.value.gameState = 'lost'
+        this.showAllMines()
       }
       else {
-        alert('You Win')
+        this.state.value.gameState = 'won'
       }
     }
   }
