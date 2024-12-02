@@ -5,6 +5,10 @@ import { GamePlay } from '~/composables/logic'
 const play = new GamePlay(12, 12)
 useStorage('vuesweeper-state', play.state)
 const state = computed(() => play.board)
+
+watchEffect(() => {
+  play.checkGameState()
+})
 </script>
 
 <template>
