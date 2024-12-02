@@ -18,8 +18,13 @@ watchEffect(() => {
   <div>
     Minesweeper
 
-    <div p5>
-      <div v-for="row, y in state" :key="y" flex="~" items-center justify-center>
+    <div w-full overflow-auto p5>
+      <div
+        v-for="row, y in state"
+        :key="y"
+        flex="~"
+        ma w-max items-center justify-center
+      >
         <MineBlock
           v-for="(block, x) in row" :key="x" :block="block" @click="play.onClick(block)"
           @contextmenu="play.onRightClick(block)"
