@@ -120,6 +120,8 @@ export class GamePlay {
 
   // 右键点击标记或取消标记地雷
   onRightClick(block: BlockState) {
+    // 移除右键默认事件
+
     if (this.state.value.gameState !== 'play') {
       return
     }
@@ -178,14 +180,12 @@ export class GamePlay {
     }
     const blocks = this.board.flat() // flat() 将嵌套的数组展平
     if (blocks.every(block => block.revealed || block.flagged)) {
-      if (blocks.some(block => block.flagged && block.mine)) {
+      if (blocks.some(block => block.flagged && !block.mine)) {
         this.state.value.gameState = 'lost'
         this.showAllMines()
-        // console.log('Game lost')
       }
       else {
         this.state.value.gameState = 'won'
-        // console.log('Game won')
       }
     }
   }

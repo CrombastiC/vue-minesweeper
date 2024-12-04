@@ -2,7 +2,7 @@
 import { isDev, toggleDev } from '~/composables'
 import { GamePlay } from '~/composables/logic'
 
-const play = new GamePlay(12, 12, 30)
+const play = new GamePlay(6, 6, 3)
 useStorage('vuesweeper-state', play.state)
 const state = computed(() => play.board)
 
@@ -27,7 +27,7 @@ watchEffect(() => {
       >
         <MineBlock
           v-for="(block, x) in row" :key="x" :block="block" @click="play.onClick(block)"
-          @contextmenu="play.onRightClick(block)"
+          @contextmenu.prevent="play.onRightClick(block)"
         />
       </div>
     </div>
@@ -35,12 +35,13 @@ watchEffect(() => {
     <div>Count:{{ mineCount }}</div>
 
     <div flex="~ gap-1" justify-center>
-      <button btn @click="($event) => toggleDev()">
-        {{ isDev ? 'DEV' : 'NORAML' }}
+      <button btn @click="toggleDev()">
+        {{ isDev ? 'DEV' : 'NORMAL' }}
       </button>
-      <button btn @click="($event) => play.reset()">
-        REST
+      <button btn @click="play.reset()">
+        RESET
       </button>
     </div>
+    <Confetti :passed="play.state.value.gameState === 'won'" />
   </div>
 </template>
