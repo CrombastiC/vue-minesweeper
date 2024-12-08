@@ -4,7 +4,7 @@ import { GamePlay } from '~/composables/logic'
 const play = new GamePlay(6, 6, 3)
 const now = ref(useNow())
 
-const timerMS = computed(() => Math.round((+now.value - play.state.value.startMs) / 1000))
+const timerMS = computed(() => Math.round(((play.state.value.endMs || +now.value) - play.state.value.startMs) / 1000))
 useStorage('vuesweeper-state', play.state)
 const state = computed(() => play.board)
 
@@ -85,6 +85,6 @@ watchEffect(() => {
         {{ isDev ? 'DEV' : 'NORMAL' }}
       </button>
     </div> -->
-    <Confetti :passed="play.state.value.gameState === 'won'" />
+    <Confetti :passed="play.state.value.status === 'won'" />
   </div>
 </template>

@@ -12,13 +12,14 @@ const directions = [
   [-1, 1],
   [0, 1],
 ]
-
+type GameStatus = 'play' | 'won' | 'lost'
 // 定义游戏状态接口
 interface GameState {
   board: BlockState[][] // 二维数组
   mineGenarated: boolean
-  gameState: 'play' | 'won' | 'lost'
+  status: GameStatus
   startMs: number
+  endMs?: number
 }
 
 // 导出 GamePlay 类
@@ -55,7 +56,7 @@ export class GamePlay {
     this.state.value = {
       startMs: +Date.now(),
       mineGenarated: false,
-      gameState: 'play',
+      status: 'play',
       board: Array.from({ length: this.height }, (_, y) =>
         Array.from({ length: this.width }, (_, x): BlockState => ({
           x,
@@ -130,7 +131,7 @@ export class GamePlay {
   onRightClick(block: BlockState) {
     // 移除右键默认事件
 
-    if (this.state.value.gameState !== 'play') {
+    if (this.state.value.status !== 'play') {
       return
     }
     if (block.revealed)
@@ -140,7 +141,7 @@ export class GamePlay {
 
   // 左键点击揭示方块
   onClick(block: BlockState) {
-    if (this.state.value.gameState === 'lost' || block.revealed) {
+    if (this.state.value.status === 'lost' || block.revealed) {
       return
     }
 
@@ -152,8 +153,7 @@ export class GamePlay {
     block.revealed = true
 
     if (block.mine) {
-      this.state.value.gameState = 'lost'
-      this.showAllMines()
+      this.onGameOver('lost')
     }
     else {
       this.expendZero(block)
@@ -189,11 +189,10 @@ export class GamePlay {
     const blocks = this.board.flat() // flat() 将嵌套的数组展平
     if (blocks.every(block => block.revealed || block.flagged || block.mine)) {
       if (blocks.some(block => block.flagged && !block.mine)) {
-        this.state.value.gameState = 'lost'
-        this.showAllMines()
+        this.onGameOver('lost')
       }
       else {
-        this.state.value.gameState = 'won'
+        this.onGameOver('won')
       }
     }
   }
@@ -203,8 +202,11 @@ export class GamePlay {
     const flags = sibLings.reduce((a, b) => a + (b.flagged ? 1 : 0), 0)
     const notRevaled = sibLings.reduce((a, b) => a + (!b.revealed && !b.flagged ? 1 : 0), 0)
     if (flags === block.adjacentMines) {
-      sibLings.forEach((s) => {
-        s.revealed = true
+      sibLings.forEach((i) => {
+        i.revealed = true
+        if (i.mine) {
+          this.onGameOver('lost')
+        }
       })
     }
     const missingFlags = block.adjacentMines - flags
@@ -214,6 +216,14 @@ export class GamePlay {
           i.flagged = true
         }
       })
+    }
+  }
+
+  onGameOver(status: GameStatus) {
+    this.state.value.status = status
+    this.state.value.endMs = +Date.now()
+    if (status === 'lost') {
+      this.showAllMines()
     }
   }
 }
