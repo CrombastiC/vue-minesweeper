@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { isDev, toggleDev } from '~/composables'
 import { GamePlay } from '~/composables/logic'
 
 const play = new GamePlay(6, 6, 3)
@@ -71,17 +70,21 @@ watchEffect(() => {
         ma w-max items-center justify-center
       >
         <MineBlock
-          v-for="(block, x) in row" :key="x" :block="block" @click="play.onClick(block)"
+          v-for="(block, x) in row"
+          :key="x"
+          :block="block"
+          @click="play.onClick(block)"
+          @dblclick="play.autoExpand(block)"
           @contextmenu.prevent="play.onRightClick(block)"
         />
       </div>
     </div>
 
-    <div flex="~ gap-1" justify-center>
+    <!-- <div flex="~ gap-1" justify-center>
       <button btn @click="toggleDev()">
         {{ isDev ? 'DEV' : 'NORMAL' }}
       </button>
-    </div>
+    </div> -->
     <Confetti :passed="play.state.value.gameState === 'won'" />
   </div>
 </template>

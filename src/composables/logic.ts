@@ -187,7 +187,7 @@ export class GamePlay {
       return
     }
     const blocks = this.board.flat() // flat() 将嵌套的数组展平
-    if (blocks.every(block => block.revealed || block.flagged)) {
+    if (blocks.every(block => block.revealed || block.flagged || block.mine)) {
       if (blocks.some(block => block.flagged && !block.mine)) {
         this.state.value.gameState = 'lost'
         this.showAllMines()
@@ -195,6 +195,25 @@ export class GamePlay {
       else {
         this.state.value.gameState = 'won'
       }
+    }
+  }
+
+  autoExpand(block: BlockState) {
+    const sibLings = this.getSibLings(block)
+    const flags = sibLings.reduce((a, b) => a + (b.flagged ? 1 : 0), 0)
+    const notRevaled = sibLings.reduce((a, b) => a + (!b.revealed && !b.flagged ? 1 : 0), 0)
+    if (flags === block.adjacentMines) {
+      sibLings.forEach((s) => {
+        s.revealed = true
+      })
+    }
+    const missingFlags = block.adjacentMines - flags
+    if (notRevaled === missingFlags) {
+      sibLings.forEach((i) => {
+        if (!i.revealed && !i.flagged) {
+          i.flagged = true
+        }
+      })
     }
   }
 }
